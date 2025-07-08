@@ -139,7 +139,6 @@ async def run_bot():
     async with aiohttp.ClientSession() as session:
         tasks = [
             deal_loop(session),
-            meme_loop(session),
             nsfw_loop(session)
         ]
         await asyncio.gather(*tasks)
