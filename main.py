@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 
 # --- CONFIGURATION ---
 DEALS_WEBHOOK = "https://discord.com/api/webhooks/1392240876146655262/YgnQOEvirH_A9SJf0RC5KSquSs-cPxaFoA3fxVDk5YJMx-OQgQphiBD8mJQje4IAYc_Y"  # Replace with your actual webhook
-MEME_WEBHOOK = "https://discord.com/api/webhooks/1392238279176224898/6owmLQrIZ2xA1tBEsPkrCfVnPjnkodiqphE_x8KnO0EhDmf0WNKbjrI4MgRLOicxThZX"
 NSFW_WEBHOOK = "https://discord.com/api/webhooks/1392234905546657843/7hyRQ8ucTK9wJX9uITFE4Z4vh9B_KJzGlk9pGZVY86fu31kt59VHILMKZyQ5y4Evw_MW"
 
 # Stores
@@ -15,8 +14,7 @@ STORES = {
     "13": {"name": "Epic Games"}
 }
 
-# Meme subreddits
-SUBREDDITS = ["memes", "dankmemes"]
+
 
 # NSFW APIs
 NSFW_URLS = [
@@ -90,58 +88,6 @@ async def deal_loop(session):
         else:
             print("[DEALS] No new deals.")
         await asyncio.sleep(60)
-
-
-# --- MEME TASK ---
-async def fetch_meme(session):
-    subreddit = random.choice(SUBREDDITS)
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json?limit=50"
-    headers = {"User-Agent": "DiscordWebhookMemeBot"}
-
-    try:
-        async with session.get(url, headers=headers) as resp:
-            data = await resp.json()
-            posts = data["data"]["children"]
-            images = [p["data"] for p in posts if p["data"].get("post_hint") == "image"]
-            if images:
-                meme = random.choice(images)
-                return {
-                    "title": meme["title"],
-                    "image_url": meme["url"],
-                    "post_url": "https://reddit.com" + meme["permalink"]
-                }
-    except Exception as e:
-        print(f"[MEME] Error: {e}")
-    return None
-
-
-async def send_meme(session, meme):
-    if not meme: return
-
-    embed = {
-        "title": meme["title"],
-        "url": meme["post_url"],
-        "color": 0x2f3136,
-        "image": {"url": meme["image_url"]},
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
-
-    payload = {
-        "username": "Meme Bot",
-        "avatar_url": "https://i.postimg.cc/VN2z6LcP/IMG-2004.jpg",
-        "embeds": [embed]
-    }
-
-    async with session.post(MEME_WEBHOOK, json=payload) as resp:
-        print(f"[MEME] Sent: {meme['title']} - Status: {resp.status}")
-
-
-async def meme_loop(session):
-    while True:
-        meme = await fetch_meme(session)
-        await send_meme(session, meme)
-        await asyncio.sleep(60)
-
 
 # --- NSFW TASK ---
 async def fetch_nsfw(session):
