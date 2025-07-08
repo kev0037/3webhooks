@@ -181,7 +181,7 @@ async def nsfw_loop(session):
     while True:
         image = await fetch_nsfw(session)
         await send_nsfw(session, image)
-        await asyncio.sleep(60)
+        await asyncio.sleep(30)
 
 
 # --- DUMMY SERVER (REQUIRED BY RENDER) ---
@@ -206,17 +206,20 @@ def start_server():
 
 
 if __name__ == "__main__":
-    async def start():
-        # Run bot loops and web server together
-        bot_task = asyncio.create_task(run_bot())
+    async def main():
+        # Start background tasks
+        asyncio.create_task(run_bot())
 
-        runner = web.AppRunner(start_server())
+        # Start dummy server
+        app = start_server()
+        runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, port=8080)
+        site = web.TCPSite(runner, "0.0.0.0", 8080)
         await site.start()
-        
-        print("✅ Server is live on port 8080")
-        await bot_task  # Keep running
+        print("======= Serving on http://0.0.0.0:8080 =======")
 
-    asyncio.run(start())
+        # Keep running
+        while True:
+            await asyncio.sleep(3600)
 
+    asyncio.run(main())
