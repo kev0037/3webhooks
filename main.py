@@ -205,8 +205,18 @@ def start_server():
     return app
 
 
-# --- ENTRY POINT ---
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(run_bot())
-    web.run_app(start_server(), port=8080)
+    async def start():
+        # Run bot loops and web server together
+        bot_task = asyncio.create_task(run_bot())
+
+        runner = web.AppRunner(start_server())
+        await runner.setup()
+        site = web.TCPSite(runner, port=8080)
+        await site.start()
+        
+        print("✅ Server is live on port 8080")
+        await bot_task  # Keep running
+
+    asyncio.run(start())
+
